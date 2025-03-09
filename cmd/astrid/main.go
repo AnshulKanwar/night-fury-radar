@@ -23,6 +23,7 @@ func main() {
 	// Initialize the processor
 	processor := processor.NewMetricProcessor()
 	processor.AddCollector(collectors.CpuCollector{})
+	processor.AddCollector(collectors.MemoryCollector{})
 
 	// Start collecting metrics
 	log.Println("Starting metric collection...")
