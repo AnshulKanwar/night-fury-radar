@@ -6,11 +6,13 @@ import (
 	"sync"
 
 	"github.com/anshulkanwar/night-fury-radar/internal/astrid/collectors"
+	"github.com/anshulkanwar/night-fury-radar/internal/storage"
 	"github.com/anshulkanwar/night-fury-radar/internal/types"
 )
 
 type MetricProcessor struct {
 	ctx        context.Context
+	storage    *storage.Storage
 	metric     chan types.Metric
 	collectors []collectors.MetricCollector
 	wg         sync.WaitGroup
@@ -20,9 +22,10 @@ type MetricProcessor struct {
 func NewMetricProcessor() *MetricProcessor {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &MetricProcessor{
-		ctx:    ctx,
-		cancel: cancel,
-		metric: make(chan types.Metric, 100),
+		ctx:     ctx,
+		storage: storage.NewStorage(),
+		cancel:  cancel,
+		metric:  make(chan types.Metric, 100),
 	}
 }
 
@@ -48,7 +51,7 @@ func (p *MetricProcessor) Start() {
 			case <-p.ctx.Done():
 				return
 			case m := <-p.metric:
-				log.Println(m)
+				p.storage.Store(m)
 			}
 		}
 	}()
@@ -58,4 +61,5 @@ func (p *MetricProcessor) Stop() {
 	p.cancel()
 	p.wg.Wait()
 	close(p.metric)
+	p.storage.Close()
 }
