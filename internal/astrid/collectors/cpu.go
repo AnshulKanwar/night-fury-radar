@@ -43,7 +43,7 @@ func (c CpuCollector) collectAndSendMetric(t time.Time, metric chan<- types.Metr
 	select {
 	case metric <- types.Metric{
 		Type:      "cpu",
-		Values:    map[string]any{"cpu_percent": cpuPercent[0]},
+		Values:    map[string]any{"cpuPercent": cpuPercent[0]},
 		Timestamp: t,
 	}:
 		return nil
