@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/anshulkanwar/night-fury-radar/internal/types"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
 type Storage struct {
-	db *sql.DB
+	db       *sql.DB
+	Listener *pq.Listener
 }
 
 func NewStorage() *Storage {
@@ -24,13 +27,27 @@ func NewStorage() *Storage {
 		log.Fatal(err)
 	}
 
+	reportProblem := func(ev pq.ListenerEventType, err error) {
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	listener := pq.NewListener(connStr, 10*time.Second, time.Minute, reportProblem)
+	err = listener.Listen("metrics")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return &Storage{
-		db: db,
+		db:       db,
+		Listener: listener,
 	}
 }
 
 func (s *Storage) Close() {
 	s.db.Close()
+	s.Listener.Close()
 }
 
 func (s *Storage) Store(metric types.Metric) {
@@ -43,4 +60,27 @@ func (s *Storage) Store(metric types.Metric) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (s *Storage) ReadLast100Points(metricType string) []types.Metric {
+	rows, err := s.db.Query("SELECT type, timestamp, values FROM system_metrics WHERE type = $1 ORDER BY timestamp LIMIT 100", metricType)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	metrics := make([]types.Metric, 0)
+	for rows.Next() {
+		var metric types.Metric
+		var valuesJSON []byte
+		if err := rows.Scan(&metric.Type, &metric.Timestamp, &valuesJSON); err != nil {
+			log.Fatal(err)
+		}
+		if err := json.Unmarshal(valuesJSON, &metric.Values); err != nil {
+			log.Fatal(err)
+		}
+		metrics = append(metrics, metric)
+	}
+
+	return metrics
 }
