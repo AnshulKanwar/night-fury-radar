@@ -5,7 +5,7 @@ import (
 )
 
 type Metric struct {
-	Timestamp time.Time
-	Type      string
-	Values    map[string]any
+	Timestamp time.Time      `json:"timestamp"`
+	Type      string         `json:"type"`
+	Values    map[string]any `json:"values"`
 }
