@@ -7,8 +7,7 @@ Night Fury Radar is a lightweight system monitor. It ships two binaries:
 
 ## System Design
 
-## Overview
-
+### Overview
 Astrid collects the metrics and saves it to DB. Hiccup serves the metrics to clients via websocket.
 
 ### Astrid
