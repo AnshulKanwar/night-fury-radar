@@ -63,7 +63,7 @@ func (s *Storage) Store(metric types.Metric) {
 }
 
 func (s *Storage) ReadLast100Points(metricType string) []types.Metric {
-	rows, err := s.db.Query("SELECT type, timestamp, values FROM system_metrics WHERE type = $1 ORDER BY timestamp LIMIT 100", metricType)
+	rows, err := s.db.Query("SELECT type, timestamp, values FROM system_metrics WHERE type = $1 ORDER BY timestamp DESC LIMIT 100", metricType)
 	if err != nil {
 		log.Fatal(err)
 	}
