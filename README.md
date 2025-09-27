@@ -59,7 +59,14 @@ DB_USER=your_postgres_user
 DB_NAME=night_fury_radar
 ```
 ## Database setup
-Create the database (if it does not exist), the table Astrid writes into, and a trigger that broadcasts new rows so Hiccup can relay them to WebSocket clients:
+Create the database (if it does not exist), then load the schema and trigger that publishes new samples to the `metrics` channel:
+
+```bash
+createdb night_fury_radar            # or use an existing database
+psql -U "$DB_USER" -d "$DB_NAME" -f db/schema.sql
+```
+
+The `db/schema.sql` script provisions the `system_metrics` table, an index optimised for the read path, and a trigger that `pg_notify`s each inserted row. Update the SQL whenever the schema changes so fresh clones can recreate the database quickly.
 
 ## Running locally
 1. Ensure Postgres is running and `.env` is populated.
